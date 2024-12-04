@@ -1,10 +1,15 @@
+import org.scalajs.linker.interface.ModuleSplitStyle
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.*
+import sbt.*
+import sbt.Keys.*
+import scala.collection.Seq
 import xerial.sbt.Sonatype.GitHubHosting
 import xerial.sbt.Sonatype.sonatypeCentralHost
 
 ThisBuild / tlBaseVersion := "0.0"
 val scala3Version = "3.5.2"
 
-ThisBuild / name                   := "project-template"
+ThisBuild / name                   := "mason"
 ThisBuild / homepage               := Some(url(s"https://github.com/FunktionalIO/${(ThisBuild / name).value}"))
 ThisBuild / description            := ""
 ThisBuild / scalaVersion           := scala3Version
@@ -41,7 +46,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 
 // Dependencies versions
 val versions = new {
-    val munit = "1.0.2"
+    val munit = "1.0.3"
 }
 
 val sharedSettings = Seq(
@@ -53,29 +58,70 @@ val sharedSettings = Seq(
   // Headers
   headerMappings := headerMappings.value + (HeaderFileType.scala -> HeaderCommentStyle.cppStyleLineComment),
   headerLicense  := Some(HeaderLicense.Custom(
-    """|Copyright (c) 2024-2024 by Raphaël Lemaitre and Contributors
+    """|Copyright (c) 2024-2024 by Raphaël Lemaitre and Contributors 
            |This software is licensed under the Eclipse Public License v2.0 (EPL-2.0).
            |For more information see LICENSE or https://opensource.org/license/epl-2-0
            |""".stripMargin
   ))
 )
 
-lazy val core          = project
-    .in(file("modules/core"))
+lazy val common = crossProject(JSPlatform, JVMPlatform)
+    .crossType(CrossType.Pure)
+    .in(file("modules/common"))
     .settings(sharedSettings)
     .settings(
-      name         := s"${(ThisBuild / name).value}-core",
-      scalaVersion := scala3Version,
+      name := s"${(ThisBuild / name).value}-common",
+      libraryDependencies ++= Seq("io.github.iltotore" %%% "iron" % "2.6.0")
+    )
+
+lazy val backend = project
+    .in(file("modules/backend"))
+    .enablePlugins(BuildInfoPlugin)
+    .dependsOn(common.jvm)
+    .settings(sharedSettings)
+    .settings(
+      name                                   := s"${(ThisBuild / name).value}-backend",
+      scalaVersion                           := scala3Version,
+      buildInfoKeys                          := Seq[BuildInfoKey](name, version, description),
+      buildInfoPackage                       := "mason.build",
+      buildInfoOptions                       := Seq(BuildInfoOption.Traits("pillars.BuildInfo")),
       libraryDependencies ++= Seq(
-        "org.pkl-lang"   % "pkl-config-java-all" % versions.pkl,
-        "org.scalameta" %% "munit"               % versions.munit % Test
+        "com.rlemaitre" %% "pillars-core" % "0.3.23",
+        "org.scalameta" %% "munit"        % versions.munit % Test
+      ),
+      libraryDependencySchemes += "io.circe" %% "circe-yaml" % VersionScheme.Always
+    )
+
+lazy val frontend = project
+    .in(file("modules/frontend"))
+    .enablePlugins(ScalaJSPlugin, SbtVitePlugin)
+    .dependsOn(common.js)
+    .settings(sharedSettings)
+    .settings(
+      name                            := s"${(ThisBuild / name).value}-frontend",
+      scalaJSUseMainModuleInitializer := true,
+      viteOtherSources                := Seq(
+        Location.FromProject(file("src/main/entrypoint")),
+        Location.FromProject(file("src/main/styles"))
+      ),
+      scalaJSLinkerConfig ~= {
+          _.withModuleKind(ModuleKind.CommonJSModule)
+//              .withModuleSplitStyle(
+//                ModuleSplitStyle.SmallModulesFor(List("main"))
+//              )
+      },
+      libraryDependencies ++= Seq(
+        "org.scala-js"       %%% "scalajs-dom" % "2.8.0",
+        "com.raquo"          %%% "laminar"     % "17.1.0",
+        "io.github.iltotore" %%% "iron"        % "2.6.0"
       )
     )
+
 lazy val root = project
     .in(file("."))
-    .aggregate(core)
+    .aggregate(backend)
     .settings(sharedSettings)
     .settings(
-      name           := "${(ThisBuild / name).value}",
+      name           := (ThisBuild / name).value,
       publish / skip := true
     )

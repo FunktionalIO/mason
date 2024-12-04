@@ -1,0 +1,10 @@
+= Mason: The Pillars builder
+
+== Usage
+
+This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+
+== License
+
+This project is licensed under the Eclipse Public License 2.0. See the link:LICENSE[LICENSE] file for details.
+

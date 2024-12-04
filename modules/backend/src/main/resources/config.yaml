@@ -1,0 +1,109 @@
+# tag::pillars[]
+name: Bookstore
+# tag::log[]
+log:
+  level: info
+  format: enhanced
+  output:
+    type: console
+# end::log[]
+# tag::db[]
+db:
+  host: localhost
+  port: 5432
+  database: pillars_example
+  username: postgres
+  password: postgres
+  pool-size: 10
+  debug: false
+  probe:
+    timeout: PT5s
+    interval: PT10s
+    failure-count: 3
+  logging:
+    enabled: true
+    level: info
+    statements: true
+    timing: true
+# end::db[]
+# tag::db-migration[]
+db-migration:
+  url: jdbc:postgresql://localhost:5432/pillars_example
+  username: postgres
+  password: postgres
+  system-schema: public
+  app-schema: public
+  baseline-version: "0"
+# end::db-migration[]
+# tag::api[]
+api:
+  enabled: true
+  http:
+    host: 0.0.0.0
+    port: 9876
+    logging:
+      enabled: true
+      headers: true
+      body: true
+      level: info
+  open-api:
+    enabled: false
+    path-prefix: ["docs"]
+    yaml-name: "pillars-example.yaml"
+    context-path: []
+    use-relative-paths: true
+    show-extensions: false
+# end::api[]
+# tag::admin[]
+admin:
+  enabled: true
+  http:
+    host: 0.0.0.0
+    port: 19876
+    logging:
+      enabled: true
+      headers: true
+      body: true
+      level: debug
+  open-api:
+    enabled: false
+    path-prefix: ["docs"]
+    yaml-name: "pillars-example.yaml"
+    context-path: []
+    use-relative-paths: true
+    show-extensions: false
+# end::admin[]
+# tag::observability[]
+observability:
+  enabled: true
+  service-name: bookstore
+  metrics:
+    enabled: true
+  traces:
+    enabled: true
+# end::observability[]
+# tag::http-client[]
+http-client:
+  follow-redirect: true
+  user-agent: pillars/bookstore
+  logging:
+    enabled: true
+    headers: true
+    body: true
+    level: info
+# end::http-client[]
+# tag::feature-flags[]
+feature-flags:
+  enabled: true
+  flags:
+    - name: feature-1
+      status: enabled
+    - name: feature-2
+      status: disabled
+# end::feature-flags[]
+# end::pillars[]
+# tag::app[]
+app:
+  users:
+    init: true
+# end::app[]

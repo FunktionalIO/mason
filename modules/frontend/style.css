@@ -1,0 +1,102 @@
+:root {
+    color-scheme: light;
+    --pico-primary-background: #091322;
+    --pico-font-family: 'AileronThin', sans-serif;
+    --pico-font-weight: normal;
+    --pico-font-style: normal;
+    --pico-font-size: 1rem;
+}
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --pico-primary-background: #091322;
+}
+
+:root([data-theme="dark"]) {
+    color-scheme: light;
+    --pico-primary-background: #091322;
+}
+
+:where(input, select, textarea, fieldset, .grid) + label + small {
+    color: var(--pico-del-color);
+}
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+footer {
+    text-align: center;
+}
+
+.left-column {
+    background-color: #091322;
+    color: #eeeeee;
+    padding: 2rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    height: 100vh;
+    --pico-font-family: 'Belgika16th', sans-serif;
+    --pico-font-weight: normal;
+    --pico-font-style: normal;
+}
+
+.left-column img {
+    height: 80px;
+}
+
+.left-column h1 {
+    font-size: 3rem;
+    font-weight: 600;
+    margin: 0;
+    color: #eeeeee;
+}
+
+.left-column p {
+    font-size: 1rem;
+    margin: 0;
+    color: #8f8f8f;
+}
+
+.right-column {
+    padding: 4rem;
+    width: 100%;
+}
+
+.modules {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 10px;
+    grid-row-gap: 0.3rem;
+}
+
+@media (min-width: 768px) {
+    body {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        flex-direction: row;
+    }
+
+    .left-column {
+        flex: 1;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .right-column {
+        margin-left: 33.33%;
+        flex: 2;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}

@@ -1,2 +1,6 @@
-addSbtPlugin("org.typelevel"    % "sbt-typelevel" % "0.7.4")
-addSbtPlugin("com.timushev.sbt" % "sbt-rewarn"    % "0.1.3")
+addSbtPlugin("org.typelevel"                     % "sbt-typelevel"            % "0.7.4")
+addSbtPlugin("com.timushev.sbt"                  % "sbt-rewarn"               % "0.1.3")
+addSbtPlugin("com.eed3si9n"                      % "sbt-buildinfo"            % "0.13.1")
+addSbtPlugin("org.portable-scala"                % "sbt-scalajs-crossproject" % "1.3.2")
+addSbtPlugin("org.scala-js"                      % "sbt-scalajs"              % "1.17.0")
+addSbtPlugin("io.github.johnhungerford.sbt.vite" % "sbt-vite"                 % "0.0.11")
