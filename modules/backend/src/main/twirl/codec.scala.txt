@@ -1,0 +1,36 @@
+@import mason.Module
+@(project: mason.Project)
+package @{project.packageName}
+
+import cats.effect.*
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import io.circe.parser.*
+
+object codec:
+    object json:
+        import io.circe.*
+        import io.circe.generic.semiauto.deriveCodec
+        import io.github.iltotore.iron.circe.given
+        import sttp.tapir.Schema
+        import sttp.tapir.codec.iron.{*, given}
+
+        given Encoder[Comment] = deriveEncoder
+        given Decoder[Comment] = deriveDecoder
+        given Schema[Comment] = Schema.derived
+    end json
+    @if(project.hasModule(Module.DbSkunk)) {
+    object db:
+        import skunk.*
+        import skunk.codec.all.*
+
+        val name: Codec[Name] = text.eimap(Name.either)(_)
+        val title: Codec[Title] = text.eimap(Title.either)(_)
+        val content: Codec[Content] = text.eimap(Content.either)(_)
+        val rating: Codec[Rating] = int4.eimap(Rating.either)(_)
+        val Comment: Codec[Comment]=
+            (title *: content *: name *: rating.opt).imap(Comment.apply)(c =>
+                (c.title, c.content, c.author , cv.rating)
+            )
+    }

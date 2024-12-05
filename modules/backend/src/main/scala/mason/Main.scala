@@ -1,19 +1,20 @@
 package mason
 
-import cats.effect.IO
+import cats.effect.*
 import mason.build.BuildInfo
-import pillars.server
-import pillars.AppInfo
-import pillars.Run
-import pillars.logger
+import mason.versionsController
+import mason.downloadController
+import pillars.*
+import pillars.flags.*
 
-object Main extends pillars.EntryPoint:
-    override def app: pillars.App[IO] = new pillars.App[IO]:
-        override def infos: AppInfo = BuildInfo.toAppInfo
+object Main extends pillars.IOApp(FeatureFlags):
+    def infos: AppInfo = BuildInfo.toAppInfo
 
-        override def run: Run[IO, IO[Unit]] =
-            for
-                _ <- logger.info("Starting Mason")
-                _ <- server.start(versionsController)
-            yield ()
+    def run: Run[IO, IO[Unit]] =
+        for
+            _ <- logger.info(s"🏛️ Welcome to ${config.name}!")
+            _ <- server.start(versionsController, downloadController)
+        yield ()
+        end for
+    end run
 end Main

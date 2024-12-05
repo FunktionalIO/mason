@@ -4,3 +4,5 @@ addSbtPlugin("com.eed3si9n"                      % "sbt-buildinfo"            % 
 addSbtPlugin("org.portable-scala"                % "sbt-scalajs-crossproject" % "1.3.2")
 addSbtPlugin("org.scala-js"                      % "sbt-scalajs"              % "1.17.0")
 addSbtPlugin("io.github.johnhungerford.sbt.vite" % "sbt-vite"                 % "0.0.11")
+addSbtPlugin("org.playframework.twirl"           % "sbt-twirl"                % "2.0.7")
+addSbtPlugin("com.github.sbt"                    % "sbt-native-packager"      % "1.10.4")

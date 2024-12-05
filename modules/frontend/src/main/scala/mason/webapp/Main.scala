@@ -1,13 +1,13 @@
 package mason.webapp
 
-import com.raquo.airstream.web.FetchBuilder
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.api.L.given
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
-import mason.{Module, PackageName, Project, ProjectName, Version}
-import mason.Module.DbDoobie
-import mason.Module.DbSkunk
+import mason.Module
+import mason.PackageName
+import mason.ProjectName
+import mason.Version
 import org.scalajs.dom
 
 object Main:
@@ -17,86 +17,27 @@ object Main:
           app()
         )
 
-    private def app(): Element =
-        div(
-          h2("Create a new project"),
-          projectUI(),
-          div(
-            "Your choice:",
-            ul(
-              li(
-                strong("Project name: "),
-                child.text <-- stateVar.signal.map(_.projectName.fold(identity, identity))
-              ),
-              li(
-                strong("Package name: "),
-                child.text <-- stateVar.signal.map(_.packageName.fold(identity, identity))
-              ),
-              li(
-                strong("Version: "),
-                child.text <-- stateVar.signal.map(_.version.name)
-              ),
-              li(
-                strong("Modules: "),
-                child.text <-- stateVar.signal.map(_.modules.mkString(", "))
-              )
-            )
-          )
-        )
-    end app
+    private val stateVar: Var[FormState] = Var(FormState())
 
-    private val versions = List(
-      Version("0.4.0", "latest"),
-      Version("0.3.23", "0.3.23"),
-      Version("0.3.22", "0.3.22"),
-      Version("0.3.21", "0.3.21"),
-      Version("0.3.20", "0.3.20")
-    )
-
-    private case class State(
-        projectName: Either[String, ProjectName] = Right("healthy-dog"),
-        packageName: Either[String, PackageName] = Right("com.example.myapp"),
-        version: Version = versions.head,
-        modules: Set[Module] = Set.empty,
-        withCI: Boolean = true,
-        withDocker: Boolean = true,
-        showErrors: Boolean = false
-    ):
-        def hasErrors: Boolean                        =
-            projectName.isLeft || packageName.isLeft || modules.exists(module => moduleError(module.name).isDefined)
-        def nameError: Option[String]                 = projectName.left.toOption
-        def packageError: Option[String]              = packageName.left.toOption
-        def modulesErrors: Option[String]             = Option.when(modules.contains(DbSkunk) && modules.contains(DbDoobie))(
-          s"${DbDoobie.name} and ${DbSkunk.name} can't be used at the same time"
-        )
-        def moduleError(name: String): Option[String] =
-            modules.find(_.name == name).flatMap:
-                case DbDoobie if modules.contains(DbSkunk) =>
-                    Some(s"${DbDoobie.name} and ${DbSkunk.name} can't be used at the same time")
-                case DbSkunk if modules.contains(DbDoobie) =>
-                    Some(s"${DbDoobie.name} and ${DbSkunk.name} can't be used at the same time")
-                case _                                     => None
-
-        def project: Project = Project(
-          projectName.getOrElse(""),
-          version,
-          modules
-        )
-    end State
-
-    private val stateVar: Var[State] = Var(State())
-
-    private val nameWriter    =
+    private val nameWriter =
         stateVar.updater[String]((state, name) => state.copy(projectName = name.refineEither))
+
     private val packageWriter =
         stateVar.updater[String]((state, name) => state.copy(packageName = name.refineEither))
+
+    private val orgWriter =
+        stateVar.updater[String]((state, name) => state.copy(orgName = name.refineEither))
+
     private val versionWriter =
         stateVar.updater[String]((state, v) =>
-            state.copy(version = versions.find(_.number == v).getOrElse(versions.head))
+            state.copy(version = FormState.availableVersions.find(_.number == v).getOrElse(FormState.latestVersion))
         )
-    private val ciUpdater     = stateVar.updater[Boolean]((state, v) => state.copy(withCI = v))
+
+    private val ciUpdater = stateVar.updater[Boolean]((state, v) => state.copy(withCI = v))
+
     private val dockerUpdater = stateVar.updater[Boolean]((state, v) => state.copy(withDocker = v))
-    private val moduleWriter  =
+
+    private val moduleUpdater =
         stateVar.updater[String]((state, v) =>
             val newModules = Module
                 .values
@@ -107,52 +48,33 @@ object Main:
                 .getOrElse(state.modules)
             state.copy(modules = newModules)
         )
-
-    private val submitter = Observer[State] { state =>
+    private val submitter     = Observer[FormState] { state =>
         if state.hasErrors then
             stateVar.update(_.copy(showErrors = true))
         else
-            FetchBuilder[Project, ]()
-            FetchStream.post("/api/project", _.body(state.project)).map { response =>
-                if response.ok then
-                    dom.window.alert("Project created successfully")
-                else
-                    dom.window.alert("An error occurred while creating the project")
-            }
-            dom.window.alert(state.toString)
+            Download
+                .download("http://localhost:9876/api/v0/download", state.project)
+
     }
 
-    private def projectUI(): Element =
+    private def app(): Element = div(h2("Create a new project"), projectUI)
+
+    lazy val projectUI: Element =
         form(
           onSubmit.preventDefault.mapTo(stateVar.now()) --> submitter,
+          //
           label("Project name", forId := "projectName"),
-          input(
-            typ                       := "text",
-            idAttr                    := "projectName",
-            placeholder               := "Enter your project name",
-            controlled(
-              value <-- stateVar.signal.map(_.projectName.getOrElse("")),
-              onInput.mapToValue --> nameWriter
-            ),
-            aria.invalid <-- stateVar.signal.map(_.projectName.isLeft.toString)
-          ),
-          small(
-            child.text <-- stateVar.signal.map(_.nameError.getOrElse(""))
-          ),
+          stringInput("projectName", "Enter your project name", nameWriter, _.projectName),
+          small(child.text <-- stateVar.signal.map(_.nameError.getOrElse(""))),
+          //
+          label("Organization", forId := "orgName"),
+          stringInput("orgName", "com.acme", orgWriter, _.orgName),
+          small(child.text <-- stateVar.signal.map(_.orgError.getOrElse(""))),
+          //
           label("Package name", forId := "packageName"),
-          input(
-            typ                       := "text",
-            idAttr                    := "packageName",
-            placeholder               := "com.example.myapp",
-            controlled(
-              value <-- stateVar.signal.map(_.packageName.getOrElse("")),
-              onInput.mapToValue --> packageWriter
-            ),
-            aria.invalid <-- stateVar.signal.map(_.packageName.isLeft.toString)
-          ),
-          small(
-            child.text <-- stateVar.signal.map(_.packageError.getOrElse(""))
-          ),
+          stringInput("packageName", "com.example.myapp", packageWriter, _.packageName),
+          small(child.text <-- stateVar.signal.map(_.packageError.getOrElse(""))),
+          //
           label("Version", forId      := "version"),
           select(
             idAttr                    := "version",
@@ -160,8 +82,9 @@ object Main:
               value <-- stateVar.signal.map(_.version.number),
               onChange.mapToValue --> versionWriter
             ),
-            versions.map(version => option(value := version.number, version.name))
+            FormState.availableVersions.map(version => option(value := version.number, version.name))
           ),
+          //
           fieldSet(
             legend("Modules"),
             div(
@@ -173,7 +96,7 @@ object Main:
                       role      := "switch",
                       idAttr    := module.name,
                       value     := module.name,
-                      onChange.mapToValue --> moduleWriter,
+                      onChange.mapToValue --> moduleUpdater,
                       aria.invalid <-- stateVar.signal.map(_.moduleError(module.name).isDefined.toString)
                     ),
                     label(forId := module.name, module.name)
@@ -216,5 +139,22 @@ object Main:
             value                     := "Create project",
             disabled <-- stateVar.signal.map(_.hasErrors)
           )
+        )
+
+    private def stringInput(
+        id: String,
+        invite: String,
+        writer: Observer[String],
+        valueGetter: FormState => Either[String, String]
+    )         =
+        input(
+          typ         := "text",
+          idAttr      := id,
+          placeholder := invite,
+          controlled(
+            value <-- stateVar.signal.map(valueGetter).map(_.getOrElse("")),
+            onInput.mapToValue --> writer
+          ),
+          aria.invalid <-- stateVar.signal.map(state => state.projectName).map(_.isLeft.toString)
         )
 end Main

@@ -1,4 +1,3 @@
-import org.scalajs.linker.interface.ModuleSplitStyle
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.*
 import sbt.*
 import sbt.Keys.*
@@ -71,12 +70,22 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
     .settings(sharedSettings)
     .settings(
       name := s"${(ThisBuild / name).value}-common",
-      libraryDependencies ++= Seq("io.github.iltotore" %%% "iron" % "2.6.0")
+      libraryDependencies ++= Seq(
+        "io.github.iltotore"           %%% "iron"             % "2.6.0",
+        "io.github.iltotore"           %%% "iron-circe"       % "2.6.0",
+        "com.softwaremill.sttp.tapir"  %%% "tapir-core"       % "1.11.10",
+        "com.softwaremill.sttp.tapir"  %%% "tapir-json-circe" % "1.11.10",
+        "com.softwaremill.sttp.tapir"  %%% "tapir-iron"       % "1.11.10",
+        "com.softwaremill.sttp.shared" %%% "fs2"              % "1.4.0",
+        "co.fs2"                       %%% "fs2-core"         % "3.11.0"
+      )
     )
 
 lazy val backend = project
     .in(file("modules/backend"))
     .enablePlugins(BuildInfoPlugin)
+    .enablePlugins(SbtTwirl)
+    .enablePlugins(JavaAppPackaging)
     .dependsOn(common.jvm)
     .settings(sharedSettings)
     .settings(
@@ -85,9 +94,20 @@ lazy val backend = project
       buildInfoKeys                          := Seq[BuildInfoKey](name, version, description),
       buildInfoPackage                       := "mason.build",
       buildInfoOptions                       := Seq(BuildInfoOption.Traits("pillars.BuildInfo")),
+      Compile / mainClass                    := Some("mason.Main"),
       libraryDependencies ++= Seq(
-        "com.rlemaitre" %% "pillars-core" % "0.3.23",
-        "org.scalameta" %% "munit"        % versions.munit % Test
+        "com.rlemaitre"                %% "pillars-core"               % "0.4.1",
+        "com.rlemaitre"                %% "pillars-db-skunk"           % "0.4.1",
+        "com.rlemaitre"                %% "pillars-db-migration"       % "0.4.1",
+        "com.rlemaitre"                %% "pillars-flags"              % "0.4.1",
+        "com.rlemaitre"                %% "pillars-http-client"        % "0.4.1",
+        "com.softwaremill.sttp.shared" %% "fs2"                        % "1.4.0",
+        "co.fs2"                       %% "fs2-core"                   % "3.11.0",
+        "co.fs2"                       %% "fs2-io"                     % "3.11.0",
+        "org.postgresql"                % "postgresql"                 % "42.7.4",
+        "org.flywaydb"                  % "flyway-database-postgresql" % "11.0.1",
+        "org.scalameta"                %% "munit"                      % versions.munit % Test,
+        "org.typelevel"                %% "munit-cats-effect"          % "2.0.0"        % Test
       ),
       libraryDependencySchemes += "io.circe" %% "circe-yaml" % VersionScheme.Always
     )
@@ -113,7 +133,8 @@ lazy val frontend = project
       libraryDependencies ++= Seq(
         "org.scala-js"       %%% "scalajs-dom" % "2.8.0",
         "com.raquo"          %%% "laminar"     % "17.1.0",
-        "io.github.iltotore" %%% "iron"        % "2.6.0"
+        "io.github.iltotore" %%% "iron"        % "2.6.0",
+        "io.github.iltotore" %%% "iron-circe"  % "2.6.0"
       )
     )
 

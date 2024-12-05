@@ -1,0 +1,35 @@
+@import mason.Project
+@(project: Project)
+
+ThisBuild / organization := "@{project.organizationName}"
+ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / maintainer := "your.name@@@{project.organizationName}"
+val Scala3 = "3.5.2"
+ThisBuild / scalaVersion := Scala3 // the default Scala
+
+ThisBuild / githubWorkflowOSes         := Seq("ubuntu-latest")
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.graalvm("21"))
+ThisBuild / tlCiHeaderCheck          := true
+ThisBuild / tlCiScalafmtCheck        := true
+ThisBuild / tlCiMimaBinaryIssueCheck := true
+ThisBuild / tlCiDependencyGraphJob   := true
+ThisBuild / autoAPIMappings          := true
+
+lazy val root = (project in file("."))
+  .enablePlugins(JavaAppPackaging)
+  .settings(
+    name := "@{project.name}",
+    scalaVersion := Scala3,
+    Compile / mainClass := Some("@{project.packageName}.Main"),
+    libraryDependencies ++= Seq(
+      "com.rlemaitre" %% "pillars-core" % "@{project.version.number}",
+@for(dep <- project.modules) {      "com.rlemaitre" %% "pillars-@{dep.name}" % "@{project.version.number}",
+}
+      "io.github.iltotore" %% "iron-circe" % "2.6.0",
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.11.10",
+      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % "1.11.10",
+      "com.softwaremill.sttp.tapir" %% "tapir-iron" % "1.11.10",
+      "org.scalameta" %% "munit" % "1.0.3" % Test,
+      "org.typelevel" %% "munit-cats-effect" % "2.0.0" % Test
+    )
+  )

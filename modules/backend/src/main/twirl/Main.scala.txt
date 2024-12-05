@@ -1,0 +1,22 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import cats.effect.*
+import @{project.packageName}.build.BuildInfo
+import pillars.*
+import pillars.flags.*
+@for(module <- project.modules) {import @{module.packageName}.*
+}
+
+
+object Main extends pillars.IOApp(@{project.modules.map(_.support).mkString(", ")}):
+    def infos: AppInfo = BuildInfo.toAppInfo
+
+    def run: Run[IO, IO[Unit]] =
+        for
+            _ <- logger.info(s"🏛️ Welcome to ${config.name}!")
+            _ <- server.start()
+        yield ()
+        end for
+    end run
+end Main

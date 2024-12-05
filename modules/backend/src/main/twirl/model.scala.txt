@@ -1,0 +1,24 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import io.github.iltotore.iron.*
+import io.github.iltotore.iron.constraint.*
+
+case class Comment(title: Option[Title], content: Option[Content], author: Option[Name], rating: Rating)
+
+type TitleConstraint = Not[Blank] & Not[Empty]
+type Title = String :| TitleConstraint
+object Title extends RefinedTypeOps.Transparent[Title]
+
+type NameConstraint = Not[Blank] & Not[Empty]
+type Name = String :| NameConstraint
+object Name extends RefinedTypeOps.Transparent[Name]
+
+type ContentConstraint = Not[Blank] & Not[Empty]
+type Content = String :| ContentConstraint
+object Content extends RefinedTypeOps.Transparent[Content]
+
+type RatingConstraint = Interval.Closed[1, 10]
+type Rating = Int :| RatingConstraint
+object Rating extends RefinedTypeOps.Transparent[Rating]
+
