@@ -1,10 +1,13 @@
 @(project: mason.Project)
 package @{project.packageName}
 
-import cats.effect.*
+import cats.effect.IO
 import @{project.packageName}.build.BuildInfo
-import pillars.*
-import pillars.flags.*
+import pillars.AppInfo
+import pillars.Pillars
+import pillars.Run
+import pillars.logger
+import pillars.server
 @for(module <- project.modules) {import @{module.packageName}.*
 }
 
@@ -14,8 +17,10 @@ object Main extends pillars.IOApp(@{project.modules.map(_.support).mkString(", "
 
     def run: Run[IO, IO[Unit]] =
         for
-            _ <- logger.info(s"🏛️ Welcome to ${config.name}!")
-            _ <- server.start()
+            config  <- Pillars[IO].readConfig[Config]
+            _       <- logger.info(s"🏛️ Welcome to ${config.name}!")
+            metrics <- Metrics.setup(Pillars[IO].observability)
+            _       <- server.start(homeController(metrics))
         yield ()
         end for
     end run

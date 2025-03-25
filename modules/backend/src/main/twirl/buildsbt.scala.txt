@@ -1,10 +1,18 @@
 @import mason.Project
 @(project: Project)
 
+val versions = new {
+    val scala = "3.6.3"
+    val pillars = "@{project.version.number}"
+    val iron = "2.6.0"
+    val tapir = "1.11.20"
+    val munit = "1.1.0"
+    val munitCE = "2.0.0"
+}
 ThisBuild / organization := "@{project.organizationName}"
 ThisBuild / tlBaseVersion := "0.1"
-ThisBuild / maintainer := "your.name@@@{project.organizationName}"
-val Scala3 = "3.5.2"
+ThisBuild / maintainer := "your.name@@@{project.organizationDomain}"
+val Scala3 = "3.6.3"
 ThisBuild / scalaVersion := Scala3 // the default Scala
 
 ThisBuild / githubWorkflowOSes         := Seq("ubuntu-latest")
@@ -15,21 +23,28 @@ ThisBuild / tlCiMimaBinaryIssueCheck := true
 ThisBuild / tlCiDependencyGraphJob   := true
 ThisBuild / autoAPIMappings          := true
 
+enablePlugins(JavaAppPackaging)
+enablePlugins(DockerPlugin)
+
 lazy val root = (project in file("."))
-  .enablePlugins(JavaAppPackaging)
-  .settings(
-    name := "@{project.name}",
-    scalaVersion := Scala3,
-    Compile / mainClass := Some("@{project.packageName}.Main"),
-    libraryDependencies ++= Seq(
-      "com.rlemaitre" %% "pillars-core" % "@{project.version.number}",
-@for(dep <- project.modules) {      "com.rlemaitre" %% "pillars-@{dep.name}" % "@{project.version.number}",
-}
-      "io.github.iltotore" %% "iron-circe" % "2.6.0",
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.11.10",
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % "1.11.10",
-      "com.softwaremill.sttp.tapir" %% "tapir-iron" % "1.11.10",
-      "org.scalameta" %% "munit" % "1.0.3" % Test,
-      "org.typelevel" %% "munit-cats-effect" % "2.0.0" % Test
+    .enablePlugins(BuildInfoPlugin)
+    .settings(
+        name := "@{project.name}",
+        scalaVersion := Scala3,
+        Compile / mainClass := Some("@{project.packageName}.Main"),
+        buildInfoKeys                          := Seq[BuildInfoKey](name, version, description),
+        buildInfoPackage                       := "@{project.packageName}.build",
+        buildInfoUsePackageAsPath := true,
+        buildInfoOptions                       := Seq(BuildInfoOption.Traits("pillars.BuildInfo")),
+        dockerExposedPorts ++= Seq(9876, 19876),
+        libraryDependencies ++=
+            Seq(
+                "pillars-core",
+@for(dep <- project.modules) {
+                "pillars-@{dep.name}",
+}            ).map("io.funktional" %% _ % versions.pillars),
+        libraryDependencies ++= Seq("tapir-core", "tapir-json-circe", "tapir-iron").map("com.softwaremill.sttp.tapir" %% _ % versions.tapir),
+        libraryDependencies ++= Seq("iron-circe").map("io.github.iltotore" %% _ % versions.iron),
+        libraryDependencies ++= Seq("org.scalameta" %% "munit" % versions.munit % Test),
+        libraryDependencies ++= Seq("org.typelevel" %% "munit-cats-effect" % versions.munitCE % Test)
     )
-  )

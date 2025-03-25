@@ -11,11 +11,9 @@ import pillars.Controller.HttpEndpoint
 import pillars.Pillars
 import pillars.logger
 
-val versionsController: Controller[IO] =
+def versionsController(service: versions.Service): Controller[IO] =
     def versions: HttpEndpoint[IO] = endpoints.v0.versions.serverLogicSuccess: _ =>
-        List(
-          Version("0.3.20", "latest")
-        ).pure[IO]
+        service.getVersions
     List(versions)
 end versionsController
 

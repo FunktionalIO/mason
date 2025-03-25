@@ -1,0 +1,32 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import cats.effect.IO
+import io.circe.Decoder
+import io.github.iltotore.iron.*
+import munit.CatsEffectSuite
+import pillars.ApiServer
+import pillars.AppInfo
+import pillars.Config
+import pillars.Module
+import pillars.Observability
+import pillars.Pillars
+import scribe.Scribe
+
+class ServicesSuite extends CatsEffectSuite:
+    // Dummy pillars implementation
+    given Pillars[IO] = new Pillars[IO]:
+        override def appInfo: AppInfo                       = ???
+        override def observability: Observability[IO]       = ???
+        override def config: Config.PillarsConfig           = ???
+        override def apiServer: ApiServer[IO]               = ???
+        override def logger: Scribe[IO]                     = scribe.cats.io
+        override def readConfig[T](using Decoder[T]): IO[T] = ???
+        override def module[T](key: Module.Key): T          = ???
+
+    test("greet should return a greeting"):
+        assertIO(greet(Name("Bob"), Metrics.noop), Greeting(Message("Hello, Bob!"), Name("Bob"), Hash(42)))
+
+    test("boom should throw an exception"):
+        interceptIO[RuntimeException](boom(Metrics.noop))
+end ServicesSuite

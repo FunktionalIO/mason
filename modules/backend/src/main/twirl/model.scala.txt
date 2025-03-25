@@ -2,23 +2,18 @@
 package @{project.packageName}
 
 import io.github.iltotore.iron.*
-import io.github.iltotore.iron.constraint.*
+import io.github.iltotore.iron.constraint.all.*
 
-case class Comment(title: Option[Title], content: Option[Content], author: Option[Name], rating: Rating)
+case class Greeting(message: Message, to: Name, hash: Hash)
 
-type TitleConstraint = Not[Blank] & Not[Empty]
-type Title = String :| TitleConstraint
-object Title extends RefinedTypeOps.Transparent[Title]
+private type MessageConstraint = Not[Blank] DescribedAs "A message must not be blank"
+opaque type Message <: String = String :| MessageConstraint
+object Message extends RefinedTypeOps[String, MessageConstraint, Message]
 
-type NameConstraint = Not[Blank] & Not[Empty]
-type Name = String :| NameConstraint
-object Name extends RefinedTypeOps.Transparent[Name]
+type NameConstraint = ForAll[Letter | Whitespace] DescribedAs "A name must not contains only letters or spaces"
+opaque type Name <: String = String :| NameConstraint
+object Name extends RefinedTypeOps[String, NameConstraint, Name]
 
-type ContentConstraint = Not[Blank] & Not[Empty]
-type Content = String :| ContentConstraint
-object Content extends RefinedTypeOps.Transparent[Content]
-
-type RatingConstraint = Interval.Closed[1, 10]
-type Rating = Int :| RatingConstraint
-object Rating extends RefinedTypeOps.Transparent[Rating]
-
+type HashConstraint = Interval.Closed[0, 100] DescribedAs "A hash must be between 0 and 100"
+opaque type Hash <: Int = Int :| HashConstraint
+object Hash extends RefinedTypeOps[Int, HashConstraint, Hash]

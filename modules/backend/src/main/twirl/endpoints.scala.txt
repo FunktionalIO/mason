@@ -1,4 +1,34 @@
-@(groupId: String)
-package @groupId
+@(project: mason.Project)
+package @{project.packageName}
 
+import codec.json.given
+import pillars.PillarsError
+import sttp.tapir.*
+import sttp.tapir.codec.iron.given
+import sttp.tapir.json.circe.jsonBody
 
+object endpoints:
+
+    object api:
+        object v1:
+            private val base = endpoint.in("api" / "v1").errorOut(jsonBody[PillarsError.View])
+
+            val greet: Endpoint[Unit, Name, PillarsError.View, Greeting, Any] =
+                base
+                    .get
+                    .in("greet")
+                    .name("greet")
+                    .description("Say hello")
+                    .in(query[Name]("name").description("The name to greet"))
+                    .out(jsonBody[Greeting])
+
+            val boom: Endpoint[Unit, Unit, PillarsError.View, String, Any] =
+                base
+                    .get
+                    .in("boom")
+                    .name("boom")
+                    .description("Always in error")
+                    .out(stringBody)
+
+            // Define your endpoints here
+        end v1

@@ -1,0 +1,14 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import cats.effect.IO
+import pillars.Controller
+import pillars.Controller.HttpEndpoint
+import pillars.Run
+
+def homeController(metrics: Metrics): Run[IO, Controller[IO]] =
+    val greetController: HttpEndpoint[IO] = endpoints.api.v1.greet.serverLogicSuccess(greet(_, metrics))
+    val boomController: HttpEndpoint[IO]  = endpoints.api.v1.boom.serverLogicSuccess(_ => boom(metrics))
+
+    List(greetController, boomController)
+end homeController

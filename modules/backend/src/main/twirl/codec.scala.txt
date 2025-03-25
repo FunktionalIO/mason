@@ -2,12 +2,6 @@
 @(project: mason.Project)
 package @{project.packageName}
 
-import cats.effect.*
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
-import io.circe.parser.*
-
 object codec:
     object json:
         import io.circe.*
@@ -16,21 +10,21 @@ object codec:
         import sttp.tapir.Schema
         import sttp.tapir.codec.iron.{*, given}
 
-        given Encoder[Comment] = deriveEncoder
-        given Decoder[Comment] = deriveDecoder
-        given Schema[Comment] = Schema.derived
+        given Codec[Greeting] = deriveCodec[Greeting]
+        given Schema[Greeting] = Schema.derived
+        
+        // Define your own JSON codecs here
     end json
     @if(project.hasModule(Module.DbSkunk)) {
     object db:
         import skunk.*
         import skunk.codec.all.*
 
-        val name: Codec[Name] = text.eimap(Name.either)(_)
-        val title: Codec[Title] = text.eimap(Title.either)(_)
-        val content: Codec[Content] = text.eimap(Content.either)(_)
-        val rating: Codec[Rating] = int4.eimap(Rating.either)(_)
-        val Comment: Codec[Comment]=
-            (title *: content *: name *: rating.opt).imap(Comment.apply)(c =>
-                (c.title, c.content, c.author , cv.rating)
+        val name: Codec[Name]        = text.eimap(Name.either)(identity)
+        val message: Codec[Message]    = text.eimap(Message.either)(identity)
+        val hash: Codec[Hash]      = int4.eimap(Hash.either)(identity)
+        val Comment: Codec[Greeting] =
+            (message *: name *: hash).imap(Greeting.apply)(g =>
+                (g.message, g.to, g.hash)
             )
     }

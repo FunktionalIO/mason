@@ -1,0 +1,21 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import cats.effect.IO
+import org.typelevel.otel4s.metrics.Counter
+import pillars.Observability
+
+case class Metrics(greets: Counter[IO, Long], bombs: Counter[IO, Long])
+
+object Metrics:
+    def setup(observability: Observability[IO]): IO[Metrics] =
+        for
+            greetCounter <- observability.counter[Long]("greet").withUnit("1").withDescription("Number of greetings").create
+            bombCounter  <- observability.counter[Long]("bomb").withUnit("1").withDescription("Number of bombs").create
+        yield Metrics(greetCounter, bombCounter)
+        end for
+    end setup
+
+    // Used in tests
+    def noop: Metrics = Metrics(Counter.noop[IO, Long], Counter.noop[IO, Long])
+end Metrics

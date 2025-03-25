@@ -1,0 +1,8 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import io.circe.Codec
+import io.github.iltotore.iron.circe.given
+import pillars.App
+
+final case class Config(name: App.Name, greeting: Message) derives Codec.AsObject

@@ -1,6 +1,6 @@
 name: Mason - The Pillars app generator
 log:
-  level: debug
+  level: info
   format: classic
   output:
     type: console
@@ -8,7 +8,7 @@ api:
   enabled: true
   http:
     host: 0.0.0.0
-    port: 9876
+    port: 8765
     logging:
       enabled: false
       headers: true
@@ -25,14 +25,14 @@ admin:
   enabled: true
   http:
     host: 0.0.0.0
-    port: 19876
+    port: 18765
     logging:
       enabled: true
       headers: true
       body: true
       level: debug
   open-api:
-    enabled: false
+    enabled: true
     path-prefix: ["docs"]
     yaml-name: "pillars-example.yaml"
     context-path: []
@@ -52,6 +52,14 @@ feature-flags:
       status: enabled
     - name: feature-2
       status: disabled
-app:
-  users:
-    init: true
+http-client:
+  follow-redirect: true
+  user-agent: pillars/bookstore
+  logging:
+    enabled: true
+    headers: true
+    body: true
+    level: info
+owner: FunktionalIO
+repository: pillars
+refresh: PT1h

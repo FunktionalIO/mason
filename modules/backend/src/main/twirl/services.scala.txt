@@ -1,0 +1,21 @@
+@(project: mason.Project)
+package @{project.packageName}
+
+import cats.effect.IO
+import io.github.iltotore.iron.*
+import pillars.Observability.*
+import pillars.Run
+import pillars.logger
+
+def greet(name: Name, metrics: Metrics): Run[IO, IO[Greeting]] =
+    for
+        _ <- logger.info(s"👋 Hello, $name!")
+        _ <- metrics.greets.inc(name.toAttribute("name"))
+    yield Greeting(Message(s"Hello, $name!".assume), name, Hash(42))
+
+def boom(metrics: Metrics): Run[IO, IO[String]] =
+    for
+        _ <- logger.info("💣 Boom!")
+        _ <- metrics.bombs.inc()
+        _ <- IO.raiseError(new RuntimeException("💣 Boom!"))
+    yield "💥"

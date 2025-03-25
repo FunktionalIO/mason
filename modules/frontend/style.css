@@ -1,20 +1,58 @@
+/*
+    Nord Theme colors
+*/
 :root {
-    color-scheme: light;
-    --pico-primary-background: #091322;
+    --nord0: #2e3440;
+    --nord1: #3b4252;
+    --nord2: #434c5e;
+    --nord3: #4c566a;
+    --nord4: #d8dee9;
+    --nord5: #e5e9f0;
+    --nord6: #eceff4;
+    --nord7: #8fbcbb;
+    --nord8: #88c0d0;
+    --nord9: #81a1c1;
+    --nord10: #5e81ac;
+    --nord11: #bf616a;
+    --nord12: #d08770;
+    --nord13: #ebcb8b;
+    --nord14: #a3be8c;
+    --nord15: #b48ead;
+}
+:root {
+    --pico-primary: var(--nord0);
+    /*--pico-primary-background: var(--nord0);*/
     --pico-font-family: 'AileronThin', sans-serif;
     --pico-font-weight: normal;
     --pico-font-style: normal;
-    --pico-font-size: 1rem;
+    --pico-font-size: 1.2rem;
+    /*--pico-contrast: #2a8983;*/
+    /*--pico-contrast-background: #2a8983;*/
 }
-[data-theme="light"],
-:root:not([data-theme="dark"]) {
+
+[data-theme=light],
+:root:not([data-theme=dark]),
+:host:not([data-theme=dark]) {
     color-scheme: light;
-    --pico-primary-background: #091322;
+    --pico-primary: var(--nord4);
+    --pico-primary-background: var(--nord0);
+    --pico-contrast-background: var(--nord10);
 }
 
 :root([data-theme="dark"]) {
-    color-scheme: light;
-    --pico-primary-background: #091322;
+    /*--pico-primary-background: #091322;*/
+    /*--pico-contrast: #2a8983;*/
+    /*--pico-contrast-background: #2a8983;*/
+    --pico-primary: var(--nord7);
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    :root:not([data-theme]),
+    :host:not([data-theme]) {
+        /*--pico-primary-background: #091322;*/
+        /*--pico-contrast: #2a8983;*/
+        /*--pico-contrast-background: #2a8983;*/
+    }
 }
 
 :where(input, select, textarea, fieldset, .grid) + label + small {
@@ -30,7 +68,7 @@ footer {
 }
 
 .left-column {
-    background-color: #091322;
+    background-color: var(--pico-primary-background);
     color: #eeeeee;
     padding: 2rem;
     text-align: left;
@@ -49,14 +87,13 @@ footer {
 }
 
 .left-column h1 {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 600;
     margin: 0;
     color: #eeeeee;
 }
 
-.left-column p {
-    font-size: 1rem;
+.left-column small {
     margin: 0;
     color: #8f8f8f;
 }

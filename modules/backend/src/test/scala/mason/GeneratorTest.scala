@@ -1,17 +1,19 @@
 package mason
 
 import cats.effect.IO
-import fs2.io.file.{Files, Path}
+import fs2.io.file.Files
+import fs2.io.file.Path
 import io.github.iltotore.iron.*
-import mason.generator.{FileEntry, zipPipe}
+import mason.generator.FileEntry
+import mason.generator.zipPipe
 import munit.CatsEffectSuite
 
 class GeneratorTest extends CatsEffectSuite:
     test("Generate a ZIP file"):
         val files = fs2.Stream(
-          FileEntry("file1.txt", fs2.Stream.emits("Content of file 1".getBytes).covary[IO]),
-          FileEntry("file2.txt", fs2.Stream.emits("Content of file 2".getBytes).covary[IO]),
-          FileEntry("file3.txt", fs2.Stream.emits("Another file with more content".getBytes).covary[IO])
+            FileEntry("file1.txt", fs2.Stream.emits("Content of file 1".getBytes).covary[IO]),
+            FileEntry("file2.txt", fs2.Stream.emits("Content of file 2".getBytes).covary[IO]),
+            FileEntry("file3.txt", fs2.Stream.emits("Another file with more content".getBytes).covary[IO])
         )
 
         val zipStream = files.through(zipPipe())

@@ -6,7 +6,7 @@ object codec:
         import io.circe.generic.semiauto.deriveCodec
         import io.github.iltotore.iron.circe.given
         import sttp.tapir.Schema
-        import sttp.tapir.codec.iron.{*, given}
+        import sttp.tapir.codec.iron.given
 
         given Codec[Version]  = deriveCodec[Version]
         given Schema[Version] = Schema.derived[Version]
@@ -18,8 +18,8 @@ object codec:
         given Schema[Failure] = Schema.derived
 
         given Encoder[mason.Module] = Encoder.encodeString.contramap(_.name)
-        given Decoder[Module] =
+        given Decoder[Module]       =
             Decoder.decodeString.map(Module.fromString(_).getOrElse(throw DecodingFailure("Invalid module", Nil)))
-        given Schema[Module] = Schema.string
+        given Schema[Module]        = Schema.string
     end json
 end codec

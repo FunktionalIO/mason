@@ -1,20 +1,31 @@
 package mason.webapp
 
+import io.funktional.rumpel.*
+import io.funktional.rumpel.dictionaries.Adjectives
+import io.funktional.rumpel.dictionaries.Animals
+import io.funktional.rumpel.dictionaries.Colors
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
-import mason.Module.{DbDoobie, DbSkunk}
-import mason.{Module, OrganizationName, PackageName, Project, ProjectName, Version}
+import mason.Module
+import mason.Module.DbDoobie
+import mason.Module.DbSkunk
+import mason.OrganizationName
+import mason.PackageName
+import mason.Project
+import mason.ProjectName
+import mason.Version
 
 case class FormState(
-    projectName: Either[String, ProjectName] = Right("healthy-dog"),
+    projectName: Either[String, ProjectName] = Right(FormState.nameGenerator.generate.refineUnsafe),
     packageName: Either[String, PackageName] = Right("com.acme.myapp"),
     orgName: Either[String, OrganizationName] = Right("com.acme"),
-    version: Version = FormState.latestVersion,
+    version: Option[Version] = None,
     modules: Set[Module] = Set.empty,
     withCI: Boolean = true,
     withDocker: Boolean = true,
     showErrors: Boolean = false
 ):
+    def randomName(): FormState                   = copy(projectName = Right(FormState.nameGenerator.generate.refineUnsafe))
     def hasErrors: Boolean                        =
         projectName.isLeft || packageName.isLeft || orgName.isLeft || modules.exists(module =>
             moduleError(module.name).isDefined
@@ -23,7 +34,7 @@ case class FormState(
     def packageError: Option[String]              = packageName.left.toOption
     def orgError: Option[String]                  = orgName.left.toOption
     def modulesErrors: Option[String]             = Option.when(modules.contains(DbSkunk) && modules.contains(DbDoobie))(
-      s"${DbDoobie.name} and ${DbSkunk.name} can't be used at the same time"
+        s"${DbDoobie.name} and ${DbSkunk.name} can't be used at the same time"
     )
     def moduleError(name: String): Option[String] =
         modules.find(_.name == name).flatMap:
@@ -39,25 +50,23 @@ case class FormState(
             pkg  <- packageName
             org  <- orgName
         yield Project(
-          name = name,
-          packageName = pkg,
-          organizationName = org,
-          version = version,
-          modules = modules,
-          generateCI = withCI,
-          generateDocker = withDocker
+            name = name,
+            packageName = pkg,
+            organizationName = org,
+            version = version.get,
+            modules = modules,
+            generateCI = withCI,
+            generateDocker = withDocker
         )).getOrElse(throw IllegalStateException("Invalid state"))
 end FormState
 
 object FormState:
-    val availableVersions: List[Version] = List(
-      Version("0.4.2", "latest (0.4.2)"),
-      Version("0.4.1", "0.4.1"),
-      Version("0.4.0", "0.4.0"),
-      Version("0.3.23", "0.3.23"),
-      Version("0.3.22", "0.3.22"),
-      Version("0.3.21", "0.3.21"),
-      Version("0.3.20", "0.3.20")
+    private val config = RumpelConfig(
+        dictionaries = List(Adjectives, Colors, Animals),
+        separator = "-",
+        length = 3
     )
-    val latestVersion: Version           = availableVersions.head
+
+    private val nameGenerator: Rumpel = Rumpel(config)
+
 end FormState
