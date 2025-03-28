@@ -17,7 +17,10 @@ case class StringInput(
                 typ          := "text",
                 idAttr       := id,
                 placeholder  := invite,
-                controlled(value <-- signal, onInput.mapToValue --> writer)
+                controlled(
+                    value <-- signal,
+                    onInput.mapToValue --> writer
+                )
             ),
             small(child.text <-- validationSignal)
         )

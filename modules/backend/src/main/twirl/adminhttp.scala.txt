@@ -1,0 +1,25 @@
+@import mason.Module
+@(project: mason.Project)
+@@host = http://localhost:19876
+@if(project.hasModule(Module.FeatureFlags)) {
+###
+# @@name List all flags
+#
+GET {{ host }}/admin/flags/
+
+###
+# @@name Get flag by id
+
+@@featureId = feature-1
+
+GET {{ host }}/admin/flags/{{featureId}}
+}
+###
+# @@name: Liveness probe
+
+GET {{ host }}/admin/probes/healthz
+
+###
+# @@name Readiness probe
+
+GET {{ host }}/admin/probes/health

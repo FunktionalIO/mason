@@ -3,12 +3,9 @@ package mason
 import cats.effect.IO
 import cats.effect.Ref
 import io.circe.Codec
-import io.circe.Json
 import io.circe.optics.JsonPath.*
-import io.circe.parser.*
 import io.github.iltotore.iron.*
 import org.http4s.EntityDecoder
-import org.http4s.Headers
 import org.http4s.Method
 import org.http4s.Request
 import org.http4s.Uri

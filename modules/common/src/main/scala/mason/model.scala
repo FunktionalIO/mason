@@ -2,6 +2,7 @@ package mason
 
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
+import sttp.model.Uri
 
 final case class Version(
     number: VersionNumber,
@@ -24,12 +25,16 @@ final case class Project(
     organizationName: OrganizationName,
     version: Version,
     modules: Set[Module],
+    license: License,
     generateCI: Boolean,
     generateDocker: Boolean
 ):
     def packagePath: String                = packageName.replace(".", "/")
     def hasModule(module: Module): Boolean = modules.contains(module)
     def organizationDomain: String         = organizationName.split('.').reverse.mkString(".")
+    def needsPostgres: Boolean             = modules.contains(Module.DbDoobie) || modules.contains(Module.DbSkunk)
+    def needsRedis: Boolean                = modules.contains(Module.Redis)
+    def needsRabbitMQ: Boolean             = modules.contains(Module.RabbitMQ)
 end Project
 
 type ProjectNameConstraint =
@@ -39,13 +44,13 @@ object ProjectName extends RefinedTypeOps.Transparent[ProjectName]
 
 type PackageNameConstraint =
     Match[
-      """^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$"""
+      """^[a-z][a-z0-9_]*(\.[a-z0-9_]*)*$"""
     ] DescribedAs "Package name must not be blank and must conform to java package naming conventions"
 type PackageName           = String :| PackageNameConstraint
 object PackageName extends RefinedTypeOps.Transparent[PackageName]
 
 type OrganizationNameConstraint = Match[
-  """^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$"""
+  """^[a-z][a-z0-9_]*(\.[a-z0-9_]*)*$"""
 ] DescribedAs "Organization name must not be blank and must conform to java package naming conventions"
 type OrganizationName           = String :| OrganizationNameConstraint
 object OrganizationName extends RefinedTypeOps.Transparent[OrganizationName]
@@ -92,6 +97,27 @@ object Module:
         case _              => None
     end fromString
 end Module
+
+enum License(val name: String, val url: Uri):
+    case Apache2 extends License("Apache-2.0", Uri.unsafeParse("https://opensource.org/licenses/Apache-2.0"))
+    case CC0 extends License("CC0", Uri.unsafeParse("https://creativecommons.org/publicdomain/zero/1.0/"))
+    case EPL2 extends License("EPL-2.0", Uri.unsafeParse("https://opensource.org/licenses/EPL-2.0"))
+    case GPL3 extends License("GPL-3.0", Uri.unsafeParse("https://opensource.org/licenses/GPL-3.0"))
+    case MIT extends License("MIT", Uri.unsafeParse("https://opensource.org/licenses/MIT"))
+    case PublicDomain extends License("Public Domain", Uri.unsafeParse("https://creativecommons.org/publicdomain/zero/1.0/"))
+end License
+
+object License:
+    def fromString(name: String): Option[License] = name match
+        case "MIT"          => Some(License.MIT)
+        case "Apache-2.0"   => Some(License.Apache2)
+        case "EPL-2.0"      => Some(License.EPL2)
+        case "CC0"          => Some(License.CC0)
+        case "GPL-3.0"      => Some(License.GPL3)
+        case "Public Domain" => Some(License.PublicDomain)
+        case _              => None
+    end fromString
+end License
 
 final case class Failure(code: String, message: String, details: Option[String])
 final case class ProjectContents[F[_]](bytes: fs2.Stream[F, Byte], fileName: FileName, length: FileSize)

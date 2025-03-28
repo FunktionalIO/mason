@@ -21,5 +21,10 @@ object codec:
         given Decoder[Module]       =
             Decoder.decodeString.map(Module.fromString(_).getOrElse(throw DecodingFailure("Invalid module", Nil)))
         given Schema[Module]        = Schema.string
+
+        given Encoder[mason.License] = Encoder.encodeString.contramap(_.name)
+        given Decoder[License]       =
+            Decoder.decodeString.map(License.fromString(_).getOrElse(throw DecodingFailure("Invalid license", Nil)))
+        given Schema[License]        = Schema.string
     end json
 end codec

@@ -19,7 +19,7 @@ object Main extends pillars.IOApp(FeatureFlags, HttpClient):
             _        <- logger.info(s"🏛️ Welcome to ${pillars.config.name}!")
             config   <- p.readConfig[Config]
             versions <- versions.service(config)
-            _        <- server.start(versionsController(versions), downloadController)
+            _        <- server.start(versionsController(versions), downloadController(config))
         yield ()
         end for
     end run

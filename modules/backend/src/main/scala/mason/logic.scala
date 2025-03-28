@@ -1,7 +1,6 @@
 package mason
 
 import cats.effect.IO
-import cats.syntax.all.*
 import fs2.io.file.Files
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
@@ -17,12 +16,12 @@ def versionsController(service: versions.Service): Controller[IO] =
     List(versions)
 end versionsController
 
-def downloadController(using p: Pillars[IO]): Controller[IO] =
+def downloadController(config: Config)(using p: Pillars[IO]): Controller[IO] =
     def download: HttpEndpoint[IO] = endpoints.v0.download[IO].serverLogicSuccess: project =>
         for
             _    <- logger.info(s"Downloading project ${project.name}...")
             path <- Files[IO].createTempFile
-            _    <- generator.generateFiles(project)
+            _    <- generator.generateFiles(project, config)
                         .through(generator.zipPipe())
                         .through(Files[IO].writeAll(path))
                         .compile

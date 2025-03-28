@@ -27,4 +27,18 @@ object codec:
             (message *: name *: hash).imap(Greeting.apply)(g =>
                 (g.message, g.to, g.hash)
             )
+    end db
+    }
+    @if(project.hasModule(Module.DbDoobie)) {
+    object db:
+        import cats.Show
+        import doobie.*
+        import io.github.iltotore.iron.*
+
+        inline given [A, C](using inline meta: Meta[A])(using Constraint[A, C], Show[A]): Meta[A :| C] =
+            meta.tiemap[A :| C](_.refineEither)(identity)
+
+        inline given [T](using m: RefinedTypeOps.Mirror[T], ev: Meta[m.IronType]): Meta[T] =
+            ev.asInstanceOf[Meta[T]]
+    end db
     }

@@ -1,0 +1,29 @@
+@(project: mason.Project)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@{project.name}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@picocss/pico@@2/css/pico.min.css">
+</head>
+<body>
+<main>
+    <h1>@{project.name}</h1>
+    <article>
+        <header>OpenAPI</header>
+        <ul>
+            <li><a href="http://localhost:9876/docs/">App</a></li>
+            <li><a href="http://localhost:19876/docs/">Admin</a></li>
+        </ul>
+    </article>
+    <article>
+        <header>Observability</header>
+        <ul>
+            <li><a href="http://localhost:3301/services/@{project.name}">Service</a></li>
+            <li><a href="http://localhost:3301/traces-explorer/">Traces</a></li>
+        </ul>
+    </article>
+</main>
+</body>
+</html>

@@ -1,3 +1,4 @@
+@import mason.Module
 @(project: mason.Project)
 package @{project.packageName}
 
@@ -19,6 +20,9 @@ object Main extends pillars.IOApp(@{project.modules.map(_.support).mkString(", "
         for
             config  <- Pillars[IO].readConfig[Config]
             _       <- logger.info(s"🏛️ Welcome to ${config.name}!")
+@if(project.hasModule(Module.DBMigration)) {
+            _       <- dbMigration.migrate("classpath:db-migrations")
+}
             metrics <- Metrics.setup(Pillars[IO].observability)
             _       <- server.start(homeController(metrics))
         yield ()

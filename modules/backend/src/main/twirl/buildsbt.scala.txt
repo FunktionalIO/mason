@@ -1,27 +1,29 @@
-@import mason.Project
-@(project: Project)
+@import mason.Module
+@(project: mason.Project, config: mason.Config)
 
 val versions = new {
-    val scala = "3.6.3"
+    val scala = "@{config.dependencies.scala}"
     val pillars = "@{project.version.number}"
-    val iron = "2.6.0"
-    val tapir = "1.11.20"
-    val munit = "1.1.0"
-    val munitCE = "2.0.0"
+    val iron = "@{config.dependencies.iron}"
+    val tapir = "@{config.dependencies.tapir}"
+@if(project.hasModule(Module.DbDoobie)){    val doobie = "@{config.dependencies.doobie}"
+}    val munit = "@{config.dependencies.munit}"
+    val munitCE = "@{config.dependencies.munitCE}"
 }
 ThisBuild / organization := "@{project.organizationName}"
 ThisBuild / tlBaseVersion := "0.1"
 ThisBuild / maintainer := "your.name@@@{project.organizationDomain}"
-val Scala3 = "3.6.3"
-ThisBuild / scalaVersion := Scala3 // the default Scala
+ThisBuild / licenses := Seq("@{project.license.name}" -> url("@{project.license.url}"))
+ThisBuild / scalaVersion := versions.scala // the default Scala
 
 ThisBuild / githubWorkflowOSes         := Seq("ubuntu-latest")
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.graalvm("21"))
-ThisBuild / tlCiHeaderCheck          := true
+ThisBuild / tlCiHeaderCheck          := false
 ThisBuild / tlCiScalafmtCheck        := true
 ThisBuild / tlCiMimaBinaryIssueCheck := true
 ThisBuild / tlCiDependencyGraphJob   := true
 ThisBuild / autoAPIMappings          := true
+
 
 enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
@@ -30,7 +32,7 @@ lazy val root = (project in file("."))
     .enablePlugins(BuildInfoPlugin)
     .settings(
         name := "@{project.name}",
-        scalaVersion := Scala3,
+        scalaVersion := versions.scala,
         Compile / mainClass := Some("@{project.packageName}.Main"),
         buildInfoKeys                          := Seq[BuildInfoKey](name, version, description),
         buildInfoPackage                       := "@{project.packageName}.build",
@@ -40,11 +42,19 @@ lazy val root = (project in file("."))
         libraryDependencies ++=
             Seq(
                 "pillars-core",
-@for(dep <- project.modules) {
-                "pillars-@{dep.name}",
+@for(dep <- project.modules) {                "pillars-@{dep.name}",
 }            ).map("io.funktional" %% _ % versions.pillars),
         libraryDependencies ++= Seq("tapir-core", "tapir-json-circe", "tapir-iron").map("com.softwaremill.sttp.tapir" %% _ % versions.tapir),
-        libraryDependencies ++= Seq("iron-circe").map("io.github.iltotore" %% _ % versions.iron),
+        libraryDependencies ++=
+            Seq(
+                "iron-circe",
+                "iron-cats",
+            ).map("io.github.iltotore" %% _ % versions.iron),
         libraryDependencies ++= Seq("org.scalameta" %% "munit" % versions.munit % Test),
-        libraryDependencies ++= Seq("org.typelevel" %% "munit-cats-effect" % versions.munitCE % Test)
-    )
+        libraryDependencies ++= Seq("org.typelevel" %% "munit-cats-effect" % versions.munitCE % Test),
+@if(project.hasModule(Module.DbDoobie)) {
+        libraryDependencies ++= Seq(
+            "org.tpolecat" %% "doobie-postgres" % versions.doobie,
+            "org.tpolecat" %% "doobie-postgres-circe" % versions.doobie,
+        )
+}    )

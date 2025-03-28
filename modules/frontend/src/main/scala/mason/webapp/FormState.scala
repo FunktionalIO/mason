@@ -6,6 +6,7 @@ import io.funktional.rumpel.dictionaries.Animals
 import io.funktional.rumpel.dictionaries.Colors
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
+import mason.License
 import mason.Module
 import mason.Module.DbDoobie
 import mason.Module.DbSkunk
@@ -21,6 +22,7 @@ case class FormState(
     orgName: Either[String, OrganizationName] = Right("com.acme"),
     version: Option[Version] = None,
     modules: Set[Module] = Set.empty,
+    license: Option[License] = Some(License.MIT),
     withCI: Boolean = true,
     withDocker: Boolean = true,
     showErrors: Boolean = false
@@ -55,6 +57,7 @@ case class FormState(
             organizationName = org,
             version = version.get,
             modules = modules,
+            license = license.getOrElse(License.MIT),
             generateCI = withCI,
             generateDocker = withDocker
         )).getOrElse(throw IllegalStateException("Invalid state"))

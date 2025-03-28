@@ -1,0 +1,5 @@
+-- add base table
+create table base(
+    id bigserial primary key,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp);

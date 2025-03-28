@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
+import mason.License
 import mason.Module
 import mason.PackageName
 import mason.ProjectName
@@ -45,7 +46,7 @@ case class Form(state: FormState, api: Api):
         stateVar.updater[String]: (s, value) =>
             s.copy(version = versions.now().find(_.number == value))
 
-    private val ciUpdater = stateVar.updater[Boolean]((s, value) => s.copy(withCI = value))
+    private val licenseUpdater = stateVar.updater[String]((s, value) => s.copy(license = License.fromString(value)))
 
     private val dockerUpdater = stateVar.updater[Boolean]((s, value) => s.copy(withDocker = value))
 
@@ -92,6 +93,26 @@ case class Form(state: FormState, api: Api):
         ).element
     end versionInput
 
+    private val licenseInput: ReactiveHtmlElement[HTMLDivElement] =
+        div(
+            fieldSet(
+                label("License", forId := "license"),
+                select(
+                    idAttr := "license",
+                    controlled(
+                        value <-- stateVar.signal.map(_.license.getOrElse(License.MIT).name),
+                        onChange.mapToValue --> licenseUpdater
+                    ),
+                    License.values.map { license =>
+                        option(
+                            value := license.name,
+                            selected <-- stateVar.signal.map(_.license == license),
+                            license.name
+                        )
+                    }
+                )
+            ),
+        )
     private val modulesInput: ReactiveHtmlElement[HTMLDivElement] =
         div(
             fieldSet(
@@ -117,18 +138,6 @@ case class Form(state: FormState, api: Api):
             small(
                 child.text <-- stateVar.signal.map(_.modulesErrors.getOrElse(""))
             )
-        )
-
-    private val ciInput: ReactiveHtmlElement[HTMLDivElement] =
-        div(
-            input(
-                typ     := "checkbox",
-                role    := "switch",
-                idAttr  := "withCI",
-                value   := "withCI",
-                onChange.mapToChecked --> ciUpdater
-            ),
-            label(forId := "withCI", "Generate Github Actions configuration")
         )
 
     private val dockerInput: ReactiveHtmlElement[HTMLDivElement] =
@@ -161,11 +170,12 @@ case class Form(state: FormState, api: Api):
             organizationInput,
             packageInput,
             versionInput,
+            licenseInput,
             modulesInput,
             div(
                 fieldSet(
                     legend("Options"),
-                    ciInput,
+//                    ciInput,
                     dockerInput
                 )
             ),
